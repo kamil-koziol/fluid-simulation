@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.1)
 project(FluidSimulation)
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_FLAGS "-O3")
 
 add_executable(FluidSimulation main.cpp verlet.hpp solver.hpp renderer.hpp)
 

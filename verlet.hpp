@@ -7,7 +7,7 @@ struct VerletObject {
   sf::Vector2f pos_old;
   sf::Vector2f acc;
   float radius = 5.0f;
-  sf::Color col = sf::Color::White;
+  sf::Color col = sf::Color::Blue;
 
   VerletObject() = default;
   VerletObject(sf::Vector2f pos_, float radius_)
@@ -22,4 +22,5 @@ struct VerletObject {
   }
 
   void accelerate(sf::Vector2f acc_) { acc += acc_; }
+  void setVelocity(sf::Vector2f vel_, float dt) { pos_old = pos - (vel_ * dt); }
 };
