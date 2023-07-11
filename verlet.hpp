@@ -15,9 +15,9 @@ struct VerletObject {
         radius(radius_) {}
 
   void updatePosition(float dt) {
-    const sf::Vector2f vel = pos - pos_old;
+    sf::Vector2f vel = pos - pos_old;
     pos_old = pos;
-    pos = pos + vel + acc * dt * dt;
+    pos = pos + vel + acc * (dt * dt);
     acc = sf::Vector2f(0.0f, 0.0f);
   }
 
