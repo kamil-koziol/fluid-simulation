@@ -4,12 +4,21 @@
 #include <vector>
 
 class CollisionGrid {
+private:
+  std::vector<int> *grid;
+  unsigned int atomSize;
+  unsigned int width;
+  unsigned int gridWidth;
+  unsigned int height;
+  unsigned int gridHeight;
+  unsigned int cells;
+
 public:
   CollisionGrid(unsigned int width, unsigned int height, unsigned int atomSize)
       : width(width), height(height), atomSize(atomSize) {
-    cells = width * height / atomSize;
     gridWidth = width / atomSize;
     gridHeight = height / atomSize;
+    cells = gridWidth * gridHeight;
 
     grid = new std::vector<int>[cells];
   }
@@ -33,6 +42,9 @@ public:
 
     int y = idx / gridWidth;
     int x = idx - (y * gridWidth);
+
+    // TODO: FIX RANGE 2 TO 1
+    // PROBABLY PROBLEMS WITH ATOM SIZE
 
     int range = 2;
     for (int i = -range; i <= range; i++) {
@@ -84,13 +96,4 @@ public:
       grid[i].clear();
     }
   }
-
-private:
-  std::vector<int> *grid;
-  unsigned int atomSize;
-  unsigned int width;
-  unsigned int gridWidth;
-  unsigned int height;
-  unsigned int gridHeight;
-  unsigned int cells;
 };

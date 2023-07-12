@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall -g")
 set(CMAKE_CXX_FLAGS_RELEASE_INIT "-Wall -O3")
 
-add_executable(FluidSimulation main.cpp verlet.hpp solver.hpp renderer.hpp collisionGrid.hpp)
+add_executable(FluidSimulation main.cpp verlet.hpp solver.hpp renderer.hpp collisionGrid.hpp utils/colors.hpp)
 
 include_directories(/usr/local/include)
 

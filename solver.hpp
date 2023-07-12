@@ -8,9 +8,31 @@
 #include <fstream>
 #include <vector>
 
+const int ATOM_SIZE = 8;
+
+struct GridVerletObject {
+  VerletObject &obj;
+  int oldIndexInGrid;
+  int newIndexInGrid;
+  int indexInObjects;
+};
+
 class Solver {
+private:
+  std::vector<VerletObject> objects;
+  sf::Vector2f gravity = sf::Vector2f(0.0f, 1000.0f);
+  int subSteps = 8;
+  const int atomSize = ATOM_SIZE;
+  unsigned int maxObjects;
+
+  int mapSize;
+  CollisionGrid collisionGrid;
+
 public:
-  Solver(int mapSize) : mapSize(mapSize), collisionGrid(mapSize, mapSize, 8) {}
+  Solver(int mapSize)
+      : mapSize(mapSize), collisionGrid(mapSize, mapSize, ATOM_SIZE) {
+    maxObjects = mapSize * mapSize / (3.2 * atomSize * atomSize) - 500;
+  }
 
   VerletObject &addObject(sf::Vector2f pos) {
     return objects.emplace_back(pos, atomSize);
@@ -42,17 +64,11 @@ public:
     file.close();
   }
 
+  int getSubsteps() const { return subSteps; }
   const std::vector<VerletObject> &getObjects() const { return objects; }
+  int getMaxObjects() const { return maxObjects; }
 
 private:
-  std::vector<VerletObject> objects;
-  sf::Vector2f gravity = sf::Vector2f(0.0f, 1000.0f);
-  CollisionGrid collisionGrid;
-  int subSteps = 8;
-  const int atomSize = 8;
-
-  int mapSize;
-
   void applyGravity() {
     for (int i = 0; i < objects.size(); i++) {
       objects[i].accelerate(gravity);
@@ -78,6 +94,35 @@ private:
     }
   }
 
+  void handleObjectsCollision(VerletObject &obj1, VerletObject &obj2) {
+    sf::Vector2f diff = obj1.pos - obj2.pos;
+    float dist = sqrt((diff.x * diff.x) + (diff.y * diff.y));
+
+    float radSum = (obj1.radius + obj2.radius);
+    bool colliding = radSum > dist;
+
+    if (colliding) {
+      sf::Vector2f normalized = diff / dist;
+      float delta = dist - radSum;
+
+      obj1.pos -= normalized * (delta / 2.0f);
+      obj2.pos += normalized * (delta / 2.0f);
+    }
+  }
+
+  void handleGridUpdate(GridVerletObject gvo1, GridVerletObject gvo2) {
+    // update collision grid if positions changed
+    if (gvo1.oldIndexInGrid != gvo1.newIndexInGrid) {
+      collisionGrid.removeVal(gvo1.oldIndexInGrid, gvo1.indexInObjects);
+      collisionGrid.addVal(gvo1.oldIndexInGrid, gvo1.indexInObjects);
+    }
+
+    if (gvo2.oldIndexInGrid != gvo2.newIndexInGrid) {
+      collisionGrid.removeVal(gvo1.oldIndexInGrid, gvo1.indexInObjects);
+      collisionGrid.addVal(gvo1.oldIndexInGrid, gvo1.indexInObjects);
+    }
+  }
+
   void checkCollisions(float dt) {
     collisionGrid.reset();
 
@@ -95,39 +140,19 @@ private:
         if (neighIdx == i)
           continue;
 
-        sf::Vector2f diff = objects[i].pos - objects[neighIdx].pos;
-        float dist = sqrt((diff.x * diff.x) + (diff.y * diff.y));
+        auto &obj1 = objects[i];
+        auto &obj2 = objects[neighIdx];
 
-        float radSum = (objects[i].radius + objects[neighIdx].radius);
-        bool colliding = radSum > dist;
+        auto oldGridIdx = collisionGrid.getCollisionGridIdx(obj1.pos);
+        auto oldNeighGridIdx = collisionGrid.getCollisionGridIdx(obj2.pos);
 
-        if (colliding) {
-          sf::Vector2f normalized = diff / dist;
-          float delta = dist - radSum;
+        handleObjectsCollision(obj1, obj2);
 
-          auto oldGridIdx = collisionGrid.getCollisionGridIdx(objects[i].pos);
-          auto oldNeighGridIdx =
-              collisionGrid.getCollisionGridIdx(objects[neighIdx].pos);
+        auto newGridIdx = collisionGrid.getCollisionGridIdx(obj1.pos);
+        auto newNeighGridIdx = collisionGrid.getCollisionGridIdx(obj2.pos);
 
-          objects[i].pos -= normalized * (delta / 2.0f);
-          objects[neighIdx].pos += normalized * (delta / 2.0f);
-
-          // update collision grid if positions changed
-
-          auto newGridIdx = collisionGrid.getCollisionGridIdx(objects[i].pos);
-          auto newNeighGridIdx =
-              collisionGrid.getCollisionGridIdx(objects[neighIdx].pos);
-
-          if (oldGridIdx != newGridIdx) {
-            collisionGrid.removeVal(oldGridIdx, i);
-            collisionGrid.addVal(newGridIdx, i);
-          }
-
-          if (oldNeighGridIdx != newNeighGridIdx) {
-            collisionGrid.removeVal(oldNeighGridIdx, neighIdx);
-            collisionGrid.addVal(newNeighGridIdx, neighIdx);
-          }
-        }
+        handleGridUpdate({obj1, oldGridIdx, newGridIdx, i},
+                         {obj2, oldNeighGridIdx, newNeighGridIdx, neighIdx});
       }
     }
   }
