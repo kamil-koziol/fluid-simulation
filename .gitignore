@@ -46,3 +46,10 @@ _deps
 FluidSimulation
 
 .cache/
+
+.ninja_deps
+.ninja_log
+
+objects.txt
+colors.txt
+build.ninja

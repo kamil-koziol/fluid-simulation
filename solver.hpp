@@ -32,6 +32,7 @@ public:
   Solver(int mapSize)
       : mapSize(mapSize), collisionGrid(mapSize, mapSize, ATOM_SIZE) {
     maxObjects = mapSize * mapSize / (3.2 * atomSize * atomSize) - 500;
+    maxObjects /= 3;
   }
 
   VerletObject &addObject(sf::Vector2f pos) {
@@ -62,6 +63,20 @@ public:
     }
 
     file.close();
+  }
+
+  void generateExplosion(sf::Vector2f position, float force, float dt) {
+    for (auto &obj : objects) {
+      auto vec = obj.pos - position;
+      float dist = sqrt(vec.x * vec.x + vec.y * vec.y);
+      auto norm = vec / dist;
+
+      if (dist == 0)
+        continue;
+
+      float explosionForce = (1 / (dist * dist)) * force;
+      obj.addVelocity(norm * explosionForce, dt);
+    }
   }
 
   int getSubsteps() const { return subSteps; }

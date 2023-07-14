@@ -14,7 +14,7 @@
 const int WSIZE = 1080;
 const int FRAMERATE = 60;
 const float dt = 1.0f / (FRAMERATE * 1.0f);
-unsigned int falls = 6;
+unsigned int falls = 2;
 
 unsigned int objectsSpawned = 0;
 std::vector<sf::Color> colors;
@@ -48,6 +48,10 @@ int main() {
         } else if (event.key.code == sf::Keyboard::Space) {
           solver.takeSnapshot("objects.txt");
         }
+      }
+      if (event.type == sf::Event::MouseButtonPressed) {
+        auto mouse = sf::Vector2f(sf::Mouse::getPosition(window));
+        solver.generateExplosion(mouse, 400000.0f, dt);
       }
     }
 

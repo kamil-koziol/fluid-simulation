@@ -23,4 +23,5 @@ struct VerletObject {
 
   void accelerate(sf::Vector2f acc_) { acc += acc_; }
   void setVelocity(sf::Vector2f vel_, float dt) { pos_old = pos - (vel_ * dt); }
+  void addVelocity(sf::Vector2f vel_, float dt) { pos_old -= vel_ * dt; }
 };
